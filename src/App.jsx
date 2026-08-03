@@ -196,6 +196,14 @@ const SLEEPER_OVERALL = {
   "Jauan Jennings":149,"Rashid Shaheed":154,"Travis Hunter":158,
 };
 
+// Players Ronal originally ranked (vs auto-added from Sleeper)
+const ORIGINALLY_RANKED = new Set([
+  ...DEFAULT_RBS.slice(0,56).map(p=>p.player),
+  ...DEFAULT_WRS.map(p=>p.player),
+  "Josh Allen","Lamar Jackson","Drake Maye","Joe Burrow","Jayden Daniels",
+  "Trey McBride","Brock Bowers","Colston Loveland","Tyler Warren",
+]);
+
 function buildDefaultPlayers() {
   const allPos = [...DEFAULT_RBS,...DEFAULT_WRS,...DEFAULT_QBS,...DEFAULT_TES];
   const lookup = new Map(allPos.map(p=>[p.player,p]));
@@ -901,6 +909,62 @@ export default function App() {
 
         {/* ═══ EDIT RANKINGS ═══ */}
         {tab==="edit"&&<>
+          {/* Unranked Players */}
+          {(()=>{
+            const unranked = players.filter(p=>!ORIGINALLY_RANKED.has(p.player));
+            if(!unranked.length) return null;
+            const grouped = {};
+            unranked.forEach(p=>{if(!grouped[p.pos])grouped[p.pos]=[];grouped[p.pos].push(p);});
+            return (
+              <div style={{background:C.card,borderRadius:8,border:`1px solid ${C.amber}40`,padding:14,marginBottom:16}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                  <h3 style={{fontSize:13,fontWeight:700,margin:0,color:C.amber}}>Unranked Players</h3>
+                  <span style={{fontSize:10,color:C.dim}}>({unranked.length} players from Sleeper not in your rankings)</span>
+                </div>
+                {["QB","RB","WR","TE"].map(pos=>{
+                  const group = grouped[pos];
+                  if(!group?.length) return null;
+                  return (
+                    <div key={pos} style={{marginBottom:12}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+                        <Badge color={POS_C[pos]}>{pos}</Badge>
+                        <span style={{fontSize:10,color:C.dim}}>{group.length} unranked · You have {players.filter(p=>p.pos===pos&&ORIGINALLY_RANKED.has(p.player)).length} ranked</span>
+                      </div>
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                        {group.sort((a,b)=>(a.slpOverall||999)-(b.slpOverall||999)).map(p=>(
+                          <div key={p.id} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 10px",background:C.bg,borderRadius:6,border:`1px solid ${C.border}`}}>
+                            <span style={{fontSize:9,color:C.dimmer,fontFamily:"monospace",minWidth:24}}>S{p.slpOverall&&p.slpOverall<999?p.slpOverall:"?"}</span>
+                            <span style={{fontSize:12,fontWeight:600,color:C.text,flex:1}}>{p.player}</span>
+                            <span style={{fontSize:9,color:C.dim,minWidth:36}}>{p.pos}{p.slpRk||"?"}</span>
+                            <span style={{fontSize:9,color:C.dim,marginRight:4}}>Insert at {pos}</span>
+                            <input type="number" min={1} placeholder="#"
+                              onKeyDown={e=>{
+                                if(e.key!=="Enter") return;
+                                const target=parseInt(e.target.value);
+                                if(isNaN(target)||target<1) return;
+                                // Insert at target posRk, shift others down
+                                setPlayers(prev=>{
+                                  const posList=prev.filter(x=>x.pos===pos&&x.id!==p.id).sort((a,b)=>a.posRk-b.posRk);
+                                  const insertIdx=Math.min(target-1,posList.length);
+                                  posList.splice(insertIdx,0,{...prev.find(x=>x.id===p.id)});
+                                  const updates=new Map();
+                                  posList.forEach((pl,i)=>updates.set(pl.id,i+1));
+                                  return prev.map(x=>updates.has(x.id)?{...x,posRk:updates.get(x.id)}:x);
+                                });
+                                e.target.value="";
+                              }}
+                              style={{width:40,background:C.card,color:C.text,border:`1px solid ${C.accent}`,borderRadius:4,padding:"3px 5px",fontSize:10,outline:"none",textAlign:"center"}} />
+                            <button onClick={()=>removePlayer(p.id)} style={{...btn("#7f1d1d",true),fontSize:9,padding:"2px 6px"}}>✕</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
           {/* Add Player */}
           <div style={{background:C.card,borderRadius:8,border:`1px solid ${C.border}`,padding:14,marginBottom:16}}>
             <h3 style={{fontSize:13,fontWeight:700,margin:"0 0 10px"}}>Add Player</h3>
