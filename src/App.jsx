@@ -235,6 +235,8 @@ export default function App() {
   const [gridPicks,setGridPicks] = useState(()=> saved?.gridPicks || {}); // key: "round-slot" -> player id
   const [gridSearchCell,setGridSearchCell] = useState(null); // which cell is being searched
   const [gridSearchText,setGridSearchText] = useState("");
+  const [gridRankView,setGridRankView] = useState("mine"); // "mine" or "sleeper"
+  const [gridPosFilter,setGridPosFilter] = useState("ALL");
 
   // Edit mode
   const [editPos,setEditPos] = useState("RB");
@@ -549,7 +551,6 @@ export default function App() {
 
         {/* ═══ DRAFT GRID ═══ */}
         {tab==="grid"&&(()=>{
-          // Serpentine: odd rounds L-R, even rounds R-L
           const getSlot = (round, col) => round % 2 === 1 ? col : numTeams - col + 1;
           const getOverallPick = (round, slot) => (round-1)*numTeams + slot;
           const cellKey = (r,c) => `${r}-${c}`;
@@ -559,7 +560,6 @@ export default function App() {
             const slot = getSlot(round, col);
             const isMe = slot === myTeamSlot;
             setGridPicks(prev => ({...prev, [key]: playerId}));
-            // Mark player as drafted
             setPlayers(prev => prev.map(p => p.id === playerId ? {...p, drafted:true, draftedBy:isMe?"me":"other", isMyPick:isMe} : p));
             setCurrentPick(prev => prev + 1);
             setGridSearchCell(null);
@@ -579,6 +579,18 @@ export default function App() {
             ? availablePlayers.filter(p => p.player.toLowerCase().includes(gridSearchText.toLowerCase())).slice(0, 8)
             : availablePlayers.sort((a,b) => a.rank - b.rank).slice(0, 8);
 
+          // Rankings panel data
+          const rankingsList = (() => {
+            let list = availablePlayers;
+            if(gridPosFilter!=="ALL") list = list.filter(p=>p.pos===gridPosFilter);
+            if(gridRankView==="sleeper") {
+              const withSlp = list.filter(p=>p.slpRk!==null).sort((a,b)=>a.slpRk-b.slpRk);
+              const noSlp = list.filter(p=>p.slpRk===null).sort((a,b)=>a.rank-b.rank);
+              return [...withSlp,...noSlp];
+            }
+            return list.sort((a,b)=>a.rank-b.rank);
+          })();
+
           return <>
             {/* Settings row */}
             <div style={{display:"flex",gap:10,marginBottom:12,alignItems:"center",flexWrap:"wrap"}}>
@@ -589,96 +601,151 @@ export default function App() {
                   {Array.from({length:numTeams},(_,i)=><option key={i+1} value={i+1}>{i+1}</option>)}
                 </select>
               </div>
-              <span style={{fontSize:10,color:C.dim}}>Click a team name to rename</span>
+              <span style={{fontSize:10,color:C.dim}}>Click team names to rename · Click cells to assign picks</span>
             </div>
 
-            {/* Grid */}
-            <div style={{overflowX:"auto",borderRadius:8,border:`1px solid ${C.border}`,position:"relative"}}>
-              <table style={{width:"100%",borderCollapse:"collapse",fontSize:10,minWidth:900}}>
-                <thead>
-                  <tr>
-                    <th style={{padding:"6px 4px",color:C.dim,fontSize:9,borderBottom:`2px solid ${C.border}`,width:36,position:"sticky",left:0,background:C.card,zIndex:2}}>Rd</th>
-                    {Array.from({length:numTeams},(_,i)=>{
-                      const slot = i+1;
-                      const isMe = slot === myTeamSlot;
+            {/* Split layout */}
+            <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
+
+              {/* LEFT: Grid */}
+              <div style={{flex:"1 1 0",minWidth:0,overflowX:"auto",borderRadius:8,border:`1px solid ${C.border}`}}>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:10,minWidth:700}}>
+                  <thead>
+                    <tr>
+                      <th style={{padding:"6px 4px",color:C.dim,fontSize:9,borderBottom:`2px solid ${C.border}`,width:28,position:"sticky",left:0,background:C.card,zIndex:2}}>Rd</th>
+                      {Array.from({length:numTeams},(_,i)=>{
+                        const slot = i+1;
+                        const isMe = slot === myTeamSlot;
+                        return (
+                          <th key={slot} style={{padding:"5px 3px",borderBottom:`2px solid ${C.border}`,background:isMe?C.accentDim:C.card,minWidth:64}}>
+                            <input value={teamNames[i]} onChange={e=>{const copy=[...teamNames];copy[i]=e.target.value;setTeamNames(copy);}}
+                              style={{background:"transparent",border:"none",color:isMe?C.accent:C.dim,fontSize:8,fontWeight:700,textAlign:"center",width:"100%",outline:"none",textTransform:"uppercase",letterSpacing:.3}} />
+                            {isMe&&<div style={{fontSize:7,color:C.accent,marginTop:1}}>MY TEAM</div>}
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.from({length:numRounds},(_,r)=>{
+                      const round = r+1;
                       return (
-                        <th key={slot} style={{padding:"6px 4px",borderBottom:`2px solid ${C.border}`,background:isMe?C.accentDim:C.card,minWidth:80,position:"relative"}}>
-                          <input value={teamNames[i]} onChange={e=>{const copy=[...teamNames];copy[i]=e.target.value;setTeamNames(copy);}}
-                            style={{background:"transparent",border:"none",color:isMe?C.accent:C.dim,fontSize:9,fontWeight:700,textAlign:"center",width:"100%",outline:"none",textTransform:"uppercase",letterSpacing:.3}} />
-                          {isMe&&<div style={{fontSize:7,color:C.accent,marginTop:1}}>MY TEAM</div>}
-                        </th>
+                        <tr key={round}>
+                          <td style={{padding:"3px",textAlign:"center",fontFamily:"monospace",fontWeight:700,color:C.dim,fontSize:9,borderRight:`1px solid ${C.border}`,position:"sticky",left:0,background:C.card,zIndex:1}}>{round}</td>
+                          {Array.from({length:numTeams},(_,c)=>{
+                            const col = c+1;
+                            const slot = getSlot(round, col);
+                            const isMe = slot === myTeamSlot;
+                            const overall = getOverallPick(round, slot);
+                            const key = cellKey(round, col);
+                            const pid = gridPicks[key];
+                            const player = pid ? players.find(p=>p.id===pid) : null;
+                            const isSearching = gridSearchCell === key;
+
+                            return (
+                              <td key={col} style={{padding:0,borderBottom:`1px solid ${C.border}`,borderRight:`1px solid ${C.border}`,background:isMe?C.accentDim:"transparent",verticalAlign:"top",position:"relative"}}>
+                                {player ? (
+                                  <div onClick={()=>{if(window.confirm(`Remove ${player.player}?`))gridClear(round,col);}}
+                                    style={{padding:"3px 4px",cursor:"pointer",minHeight:34}}>
+                                    <div style={{fontSize:9,fontWeight:700,color:C.text,lineHeight:1.2}}>{player.player}</div>
+                                    <div style={{display:"flex",gap:3,alignItems:"center",marginTop:1}}>
+                                      <span style={{fontSize:7,fontWeight:700,color:POS_C[player.pos]||C.dim}}>{player.pos}{player.posRk}</span>
+                                      <span style={{fontSize:7,color:C.dimmer}}>#{overall}</span>
+                                    </div>
+                                  </div>
+                                ) : isSearching ? (
+                                  <div style={{padding:2,position:"relative"}}>
+                                    <input autoFocus value={gridSearchText} onChange={e=>setGridSearchText(e.target.value)}
+                                      onBlur={()=>setTimeout(()=>{setGridSearchCell(null);setGridSearchText("");},200)}
+                                      onKeyDown={e=>{if(e.key==="Escape"){setGridSearchCell(null);setGridSearchText("");}
+                                        if(e.key==="Enter"&&searchResults.length)gridAssign(round,col,searchResults[0].id);}}
+                                      style={{width:"100%",background:C.bg,color:C.text,border:`1px solid ${C.accent}`,borderRadius:3,padding:"2px 4px",fontSize:9,outline:"none"}}
+                                      placeholder="Search..." />
+                                    {searchResults.length>0&&(
+                                      <div style={{position:"absolute",top:"100%",left:0,minWidth:160,background:C.card,border:`1px solid ${C.border}`,borderRadius:4,zIndex:20,maxHeight:200,overflowY:"auto",boxShadow:"0 4px 12px rgba(0,0,0,.5)"}}>
+                                        {searchResults.map(p=>(
+                                          <div key={p.id} onMouseDown={()=>gridAssign(round,col,p.id)}
+                                            style={{padding:"4px 6px",cursor:"pointer",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:4,fontSize:9}}>
+                                            <span style={{color:POS_C[p.pos],fontWeight:700,fontSize:8}}>{p.pos}{p.posRk}</span>
+                                            <span style={{color:C.text,fontWeight:600}}>{p.player}</span>
+                                            <span style={{color:C.dimmer,fontSize:7,marginLeft:"auto"}}>#{p.rank}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div onClick={()=>{setGridSearchCell(key);setGridSearchText("");}}
+                                    style={{padding:"3px 4px",cursor:"pointer",minHeight:34,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                                    <span style={{fontSize:7,color:C.dimmer}}>{overall}</span>
+                                  </div>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
                       );
                     })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.from({length:numRounds},(_,r)=>{
-                    const round = r+1;
-                    return (
-                      <tr key={round}>
-                        <td style={{padding:"4px",textAlign:"center",fontFamily:"monospace",fontWeight:700,color:C.dim,fontSize:9,borderRight:`1px solid ${C.border}`,position:"sticky",left:0,background:C.card,zIndex:1}}>
-                          {round}
-                        </td>
-                        {Array.from({length:numTeams},(_,c)=>{
-                          const col = c+1;
-                          const slot = getSlot(round, col);
-                          const isMe = slot === myTeamSlot;
-                          const overall = getOverallPick(round, slot);
-                          const key = cellKey(round, col);
-                          const pid = gridPicks[key];
-                          const player = pid ? players.find(p=>p.id===pid) : null;
-                          const isSearching = gridSearchCell === key;
+                  </tbody>
+                </table>
+              </div>
 
-                          return (
-                            <td key={col} style={{
-                              padding:0, borderBottom:`1px solid ${C.border}`, borderRight:`1px solid ${C.border}`,
-                              background: isMe ? C.accentDim : "transparent",
-                              verticalAlign:"top", position:"relative",
-                            }}>
-                              {player ? (
-                                <div onClick={()=>{if(window.confirm(`Remove ${player.player}?`))gridClear(round,col);}}
-                                  style={{padding:"4px 5px",cursor:"pointer",minHeight:38}}>
-                                  <div style={{fontSize:10,fontWeight:700,color:C.text,lineHeight:1.2}}>{player.player}</div>
-                                  <div style={{display:"flex",gap:3,alignItems:"center",marginTop:2}}>
-                                    <span style={{fontSize:8,fontWeight:700,color:POS_C[player.pos]||C.dim}}>{player.pos}{player.posRk}</span>
-                                    <span style={{fontSize:8,color:C.dimmer}}>#{overall}</span>
-                                  </div>
-                                </div>
-                              ) : isSearching ? (
-                                <div style={{padding:3,position:"relative"}}>
-                                  <input autoFocus value={gridSearchText} onChange={e=>setGridSearchText(e.target.value)}
-                                    onBlur={()=>setTimeout(()=>{setGridSearchCell(null);setGridSearchText("");},200)}
-                                    onKeyDown={e=>{if(e.key==="Escape"){setGridSearchCell(null);setGridSearchText("");}
-                                      if(e.key==="Enter"&&searchResults.length)gridAssign(round,col,searchResults[0].id);}}
-                                    style={{width:"100%",background:C.bg,color:C.text,border:`1px solid ${C.accent}`,borderRadius:3,padding:"3px 5px",fontSize:10,outline:"none"}}
-                                    placeholder="Search..." />
-                                  {searchResults.length>0&&(
-                                    <div style={{position:"absolute",top:"100%",left:0,right:0,background:C.card,border:`1px solid ${C.border}`,borderRadius:4,zIndex:20,maxHeight:200,overflowY:"auto",boxShadow:"0 4px 12px rgba(0,0,0,.5)"}}>
-                                      {searchResults.map(p=>(
-                                        <div key={p.id} onMouseDown={()=>gridAssign(round,col,p.id)}
-                                          style={{padding:"5px 8px",cursor:"pointer",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:6,fontSize:10}}>
-                                          <span style={{color:POS_C[p.pos],fontWeight:700,fontSize:9}}>{p.pos}{p.posRk}</span>
-                                          <span style={{color:C.text,fontWeight:600}}>{p.player}</span>
-                                          <span style={{color:C.dimmer,fontSize:8,marginLeft:"auto"}}>#{p.rank}</span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <div onClick={()=>{setGridSearchCell(key);setGridSearchText("");}}
-                                  style={{padding:"4px 5px",cursor:"pointer",minHeight:38,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                                  <span style={{fontSize:8,color:C.dimmer}}>{overall}</span>
-                                </div>
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
+              {/* RIGHT: Rankings Panel */}
+              <div style={{width:280,flexShrink:0,background:C.card,borderRadius:8,border:`1px solid ${C.border}`,display:"flex",flexDirection:"column",maxHeight:"calc(100vh - 140px)",position:"sticky",top:80}}>
+                {/* Panel header */}
+                <div style={{padding:"10px 12px",borderBottom:`1px solid ${C.border}`}}>
+                  <div style={{display:"flex",gap:4,marginBottom:8}}>
+                    <button onClick={()=>setGridRankView("mine")} style={{...btn(gridRankView==="mine"?C.accent:C.dimmer,true),fontSize:10,padding:"4px 10px",flex:1}}>My Rankings</button>
+                    <button onClick={()=>setGridRankView("sleeper")} style={{...btn(gridRankView==="sleeper"?"#7c3aed":C.dimmer,true),fontSize:10,padding:"4px 10px",flex:1}}>Sleeper</button>
+                  </div>
+                  <div style={{display:"flex",gap:3}}>
+                    {POSITIONS.map(p=>(
+                      <button key={p} onClick={()=>setGridPosFilter(p)} style={{...btn(gridPosFilter===p?(POS_C[p]||C.accent):C.dimmer,true),fontSize:8,padding:"2px 6px"}}>{p}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Scrollable list */}
+                <div style={{flex:1,overflowY:"auto",padding:"4px 0"}}>
+                  {rankingsList.map((p,i)=>{
+                    const tierName=tiers[p.pos]?.[p.tier]?.name||"";
+                    const tierColor=p.tier?getTierColor(p.tier):C.dimmer;
+                    // Show tier divider for "mine" view
+                    const prevTier = i>0 ? rankingsList[i-1].tier : null;
+                    const prevPos = i>0 ? rankingsList[i-1].pos : null;
+                    const showTierBreak = gridRankView==="mine" && gridPosFilter!=="ALL" && p.tier && (p.tier!==prevTier || p.pos!==prevPos) && tierName;
+
+                    return (
+                      <div key={p.id}>
+                        {showTierBreak&&(
+                          <div style={{padding:"4px 12px 2px",marginTop:i>0?4:0}}>
+                            <span style={{fontSize:8,fontWeight:700,color:tierColor,textTransform:"uppercase",letterSpacing:.3}}>{tierName.split("·")[0].trim().slice(0,30)}</span>
+                          </div>
+                        )}
+                        <div style={{display:"flex",alignItems:"center",gap:6,padding:"4px 12px",borderBottom:`1px solid ${C.border}10`,fontSize:10}}>
+                          <span style={{fontFamily:"monospace",fontSize:9,color:C.dimmer,minWidth:20,textAlign:"right"}}>
+                            {gridRankView==="sleeper" && p.slpRk ? p.slpRk : p.rank}
+                          </span>
+                          <span style={{color:POS_C[p.pos],fontWeight:700,fontSize:8,minWidth:26}}>{p.pos}{p.posRk}</span>
+                          <span style={{color:C.text,fontWeight:500,flex:1}}>{p.player}</span>
+                          {gridRankView==="sleeper" && p.slpRk && (()=>{
+                            const diff = p.slpRk - p.posRk;
+                            if(Math.abs(diff)<=1) return null;
+                            return <span style={{fontSize:8,fontWeight:700,color:diff>0?C.green:C.red,fontFamily:"monospace"}}>{diff>0?`+${diff}`:diff}</span>;
+                          })()}
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
+                  {rankingsList.length===0&&<div style={{padding:16,textAlign:"center",color:C.dim,fontSize:11}}>No available players</div>}
+                </div>
+
+                {/* Panel footer */}
+                <div style={{padding:"8px 12px",borderTop:`1px solid ${C.border}`,fontSize:9,color:C.dim}}>
+                  {rankingsList.length} available · {gridRankView==="mine"?"Sorted by your rank":"Sorted by Sleeper rank"}
+                </div>
+              </div>
+
             </div>
           </>;
         })()}
