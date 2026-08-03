@@ -27,18 +27,25 @@ function rbTier(rk){if(rk<=2)return"T1";if(rk<=8)return"T2";if(rk<=10)return"T3"
 function wrTier(rk){if(rk<=3)return"T1";if(rk<=7)return"T2";if(rk<=11)return"T3";if(rk<=14)return"T4";if(rk<=20)return"T5";if(rk<=26)return"T6";if(rk<=29)return"T7";if(rk<=32)return"T8";if(rk<=42)return"T9";if(rk<=59)return"T10";return"T11";}
 
 const DEFAULT_RBS = [
-  "Jahmyr Gibbs","Bijan Robinson","CMC","Jonathan Taylor","James Cook","Ashton Jeanty",
-  "Omarion Hampton","Chase Brown","Saquon Barkley","Devon Achane","Isiah Pacheco",
-  "Derrick Henry","Jeremiyah Love","Josh Jacobs","Javonte Williams","Cam Skattebo",
-  "Breece Hall","Kyren Williams","Quinshon Judkins","Trey'Veon Henderson","Bayshul Tuten",
-  "Bucky Irving","Travis Etienne","De'Andre Swift","Jadarian Price","David Montgomery",
-  "Chuba Hubbard","Kyle Monangai","Jaylen Warren","RJ Harvey","JK Dobbins",
-  "Rhamondre Stevenson","Rico Dowdle","Aaron Jones","Blake Corum","Jonathan Brooks",
-  "Alvin Kamara","Rachaad White","Jacory Croskey-Merrit","Jordan Mason","Woody Marks",
-  "Zach Charbonnet","Kenny Gainwell","Chris Rodriguez","Brian Robinson","Tyler Allgeier",
-  "Tyrone Tracy","Keaton Mitchell","Dylan Sampson","Jonah Coleman","Emmett Johnson",
-  "Tyjae Spears","Braelon Allen","Nicholas Singleton","Mike Washington","Kaytron Allen",
-].map((p,i)=>({player:p,pos:"RB",posRk:i+1,tier:rbTier(i+1),slpRk:null}));
+  {n:"Jahmyr Gibbs",s:1},{n:"Bijan Robinson",s:2},{n:"CMC",s:3},{n:"Jonathan Taylor",s:4},
+  {n:"James Cook",s:6},{n:"Ashton Jeanty",s:7},{n:"Omarion Hampton",s:9},{n:"Chase Brown",s:10},
+  {n:"Saquon Barkley",s:8},{n:"Devon Achane",s:5},{n:"Isiah Pacheco",s:null},
+  {n:"Derrick Henry",s:13},{n:"Jeremiyah Love",s:11},{n:"Josh Jacobs",s:14},
+  {n:"Javonte Williams",s:19},{n:"Cam Skattebo",s:21},{n:"Breece Hall",s:16},
+  {n:"Kyren Williams",s:15},{n:"Quinshon Judkins",s:22},{n:"Trey'Veon Henderson",s:20},
+  {n:"Bayshul Tuten",s:24},{n:"Bucky Irving",s:17},{n:"Travis Etienne",s:18},
+  {n:"De'Andre Swift",s:25},{n:"Jadarian Price",s:29},{n:"David Montgomery",s:23},
+  {n:"Chuba Hubbard",s:28},{n:"Kyle Monangai",s:33},{n:"Jaylen Warren",s:27},
+  {n:"RJ Harvey",s:26},{n:"JK Dobbins",s:34},{n:"Rhamondre Stevenson",s:30},
+  {n:"Rico Dowdle",s:32},{n:"Aaron Jones",s:37},{n:"Blake Corum",s:35},
+  {n:"Jonathan Brooks",s:44},{n:"Alvin Kamara",s:51},{n:"Rachaad White",s:41},
+  {n:"Jacory Croskey-Merrit",s:38},{n:"Jordan Mason",s:42},{n:"Woody Marks",s:45},
+  {n:"Zach Charbonnet",s:40},{n:"Kenny Gainwell",s:36},{n:"Chris Rodriguez",s:46},
+  {n:"Brian Robinson",s:39},{n:"Tyler Allgeier",s:43},{n:"Tyrone Tracy",s:48},
+  {n:"Keaton Mitchell",s:52},{n:"Dylan Sampson",s:null},{n:"Jonah Coleman",s:47},
+  {n:"Emmett Johnson",s:49},{n:"Tyjae Spears",s:null},{n:"Braelon Allen",s:null},
+  {n:"Nicholas Singleton",s:null},{n:"Mike Washington",s:null},{n:"Kaytron Allen",s:null},
+].map((p,i)=>({player:p.n,pos:"RB",posRk:i+1,tier:rbTier(i+1),slpRk:p.s}));
 
 const DEFAULT_WRS_RAW = [
   {p:"Puka Nacua",s:2},{p:"Ja'Marr Chase",s:1},{p:"Jaxon Smith-Njigba",s:3},
@@ -70,17 +77,17 @@ const DEFAULT_WRS = DEFAULT_WRS_RAW.map((w,i)=>{
 });
 
 const DEFAULT_QBS = [
-  {player:"Josh Allen",pos:"QB",posRk:1,tier:"",slpRk:null},
-  {player:"Lamar Jackson",pos:"QB",posRk:2,tier:"",slpRk:null},
-  {player:"Drake Maye",pos:"QB",posRk:3,tier:"",slpRk:null},
-  {player:"Joe Burrow",pos:"QB",posRk:4,tier:"",slpRk:null},
-  {player:"Jayden Daniels",pos:"QB",posRk:5,tier:"",slpRk:null},
+  {player:"Josh Allen",pos:"QB",posRk:1,tier:"",slpRk:1},
+  {player:"Lamar Jackson",pos:"QB",posRk:2,tier:"",slpRk:2},
+  {player:"Drake Maye",pos:"QB",posRk:3,tier:"",slpRk:3},
+  {player:"Joe Burrow",pos:"QB",posRk:4,tier:"",slpRk:4},
+  {player:"Jayden Daniels",pos:"QB",posRk:5,tier:"",slpRk:5},
 ];
 const DEFAULT_TES = [
-  {player:"Trey McBride",pos:"TE",posRk:1,tier:"",slpRk:null},
-  {player:"Brock Bowers",pos:"TE",posRk:2,tier:"",slpRk:null},
-  {player:"Colston Loveland",pos:"TE",posRk:3,tier:"",slpRk:null},
-  {player:"Tyler Warren",pos:"TE",posRk:4,tier:"",slpRk:null},
+  {player:"Trey McBride",pos:"TE",posRk:1,tier:"",slpRk:1},
+  {player:"Brock Bowers",pos:"TE",posRk:2,tier:"",slpRk:2},
+  {player:"Colston Loveland",pos:"TE",posRk:3,tier:"",slpRk:3},
+  {player:"Tyler Warren",pos:"TE",posRk:4,tier:"",slpRk:4},
 ];
 
 const OVERALL_ORDER = [
@@ -100,6 +107,43 @@ const OVERALL_ORDER = [
   "Jayden Daniels",
 ];
 
+// Sleeper's overall rankings (from CSV, exact order)
+const SLEEPER_OVERALL = {
+  "Jahmyr Gibbs":1,"Bijan Robinson":2,"Ja'Marr Chase":3,"Puka Nacua":4,"CMC":5,
+  "Jaxon Smith-Njigba":6,"Jonathan Taylor":7,"Amon-Ra St. Brown":8,"CeeDee Lamb":9,
+  "Justin Jefferson":10,"Devon Achane":11,"James Cook":12,"Drake London":13,
+  "Ashton Jeanty":14,"Saquon Barkley":15,"Trey McBride":16,"Omarion Hampton":17,
+  "Chase Brown":18,"AJ Brown":19,"Jeremiyah Love":20,"Brock Bowers":21,
+  "Rashee Rice":22,"George Pickens":24,"Derrick Henry":25,"Nico Collins":26,
+  "Chris Olave":27,"Malik Nabers":28,"Josh Jacobs":29,"Josh Allen":30,
+  "Kyren Williams":31,"Breece Hall":32,"Bucky Irving":33,"Tee Higgins":34,
+  "Travis Etienne":35,"Tetairoa McMillan":36,"Lamar Jackson":37,"Javonte Williams":38,
+  "Garrett Wilson":39,"Luther Burden":40,"Colston Loveland":41,"Ladd McConkey":42,
+  "Zay Flowers":43,"DeVonta Smith":44,"Emeka Egbuka":45,"Jaylen Waddle":46,
+  "Davante Adams":47,"Trey'Veon Henderson":48,"Cam Skattebo":49,"Tyler Warren":50,
+  "Drake Maye":51,"Jameson Williams":52,"Quinshon Judkins":53,"David Montgomery":54,
+  "Terry McLaurin":55,"Joe Burrow":56,"Mike Evans":57,"DJ Moore":58,
+  "Bayshul Tuten":59,"Jayden Daniels":60,"Carnell Tate":62,"Rome Odunze":63,
+  "De'Andre Swift":64,"Christian Watson":67,"RJ Harvey":68,"Jordyn Tyson":69,
+  "Brian Thomas Jr":70,"DK Metcalf":72,"Jaylen Warren":73,"Chuba Hubbard":74,
+  "Marvin Harrison Jr":75,"Makai Lemon":77,"Courtland Sutton":78,"Michael Wilson":79,
+  "Jadarian Price":80,"Rhamondre Stevenson":82,"Alec Pierce":84,"Jakobi Meyers":87,
+  "Rico Dowdle":88,"Parker Washington":89,"Kyle Monangai":90,"JK Dobbins":93,
+  "Chris Godwin":94,"Blake Corum":98,"Jordan Addison":101,"Quentin Johnston":102,
+  "Michael Pittman":103,"Wan'Dale Robinson":104,"Kenny Gainwell":108,"Aaron Jones":110,
+  "Jacory Croskey-Merrit":113,"Romeo Doubs":115,"Jayden Reed":116,
+  "Brian Robinson":121,"Josh Downs":123,"Zach Charbonnet":124,"Stefon Diggs":125,
+  "Rachaad White":126,"Jordan Mason":128,"Jayden Higgins":129,"Tyler Allgeier":130,
+  "Khalil Shakir":131,"Matthew Golden":132,"Xavier Worthy":133,"Jalen Coker":135,
+  "Jonathan Brooks":138,"Woody Marks":141,"Chris Rodriguez":142,"KC Concepcion":144,
+  "Jonah Coleman":146,"Tyrone Tracy":147,"Denzel Boston":150,"Omar Cooper Jr":151,
+  "Emmett Johnson":152,"Alvin Kamara":156,"Jalen McMillan":161,"Deebo Samuel":162,
+  "Keaton Mitchell":163,"Isiah Pacheco":999,
+  "Dylan Sampson":999,"Tyjae Spears":999,"Braelon Allen":999,
+  "Nicholas Singleton":999,"Mike Washington":999,"Kaytron Allen":999,
+  "Antonio Williams":999,"Jalen Nailor":999,
+};
+
 function buildDefaultPlayers() {
   const allPos = [...DEFAULT_RBS,...DEFAULT_WRS,...DEFAULT_QBS,...DEFAULT_TES];
   const lookup = new Map(allPos.map(p=>[p.player,p]));
@@ -109,14 +153,14 @@ function buildDefaultPlayers() {
   OVERALL_ORDER.forEach((name,i)=>{
     const src = lookup.get(name);
     if(!src) return;
-    all.push({...src, rank:i+1, onBoard:true, drafted:false, draftedBy:null, isMyPick:false, id:crypto.randomUUID()});
+    all.push({...src, rank:i+1, onBoard:true, drafted:false, draftedBy:null, isMyPick:false, id:crypto.randomUUID(), slpOverall:SLEEPER_OVERALL[name]||999});
     used.add(name);
   });
 
   let nextRank = OVERALL_ORDER.length+1;
   allPos.forEach(p=>{
     if(used.has(p.player)) return;
-    all.push({...p, rank:nextRank++, onBoard:false, drafted:false, draftedBy:null, isMyPick:false, id:crypto.randomUUID()});
+    all.push({...p, rank:nextRank++, onBoard:false, drafted:false, draftedBy:null, isMyPick:false, id:crypto.randomUUID(), slpOverall:SLEEPER_OVERALL[p.player]||999});
     used.add(p.player);
   });
   return all;
@@ -126,15 +170,15 @@ function buildDefaultPlayers() {
 // PERSISTENCE
 // ═══════════════════════════════════════════════════════
 
-const STORAGE_KEY = "draft-command-v4";
+const STORAGE_KEY = "draft-command-v5";
 
 function saveAll(state) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      v:4, ts:Date.now(),
+      v:5, ts:Date.now(),
       players: state.players.map(p=>({
         id:p.id, player:p.player, pos:p.pos, posRk:p.posRk, rank:p.rank,
-        tier:p.tier, slpRk:p.slpRk, onBoard:p.onBoard,
+        tier:p.tier, slpRk:p.slpRk, slpOverall:p.slpOverall, onBoard:p.onBoard,
         drafted:p.drafted, draftedBy:p.draftedBy, isMyPick:p.isMyPick,
       })),
       tiers: state.tiers,
@@ -152,7 +196,7 @@ function loadAll() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if(!raw) return null;
     const d = JSON.parse(raw);
-    if(d.v !== 4) return null;
+    if(d.v !== 5) return null;
     return d;
   } catch(e) { return null; }
 }
@@ -584,9 +628,7 @@ export default function App() {
             let list = availablePlayers;
             if(gridPosFilter!=="ALL") list = list.filter(p=>p.pos===gridPosFilter);
             if(gridRankView==="sleeper") {
-              const withSlp = list.filter(p=>p.slpRk!==null).sort((a,b)=>a.slpRk-b.slpRk);
-              const noSlp = list.filter(p=>p.slpRk===null).sort((a,b)=>a.rank-b.rank);
-              return [...withSlp,...noSlp];
+              return list.sort((a,b)=>(a.slpOverall||999)-(b.slpOverall||999));
             }
             return list.sort((a,b)=>a.rank-b.rank);
           })();
@@ -724,7 +766,7 @@ export default function App() {
                         )}
                         <div style={{display:"flex",alignItems:"center",gap:6,padding:"4px 12px",borderBottom:`1px solid ${C.border}10`,fontSize:10}}>
                           <span style={{fontFamily:"monospace",fontSize:9,color:C.dimmer,minWidth:20,textAlign:"right"}}>
-                            {gridRankView==="sleeper" && p.slpRk ? p.slpRk : p.rank}
+                            {gridRankView==="sleeper" && p.slpOverall && p.slpOverall<999 ? p.slpOverall : p.rank}
                           </span>
                           <span style={{color:POS_C[p.pos],fontWeight:700,fontSize:8,minWidth:26}}>{p.pos}{p.posRk}</span>
                           <span style={{color:C.text,fontWeight:500,flex:1}}>{p.player}</span>
